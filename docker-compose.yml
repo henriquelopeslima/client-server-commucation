@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  go-app:
+    stdin_open: true      # docker run -i
+    tty: true             # docker run -t
+    build: ./docker/go
+    volumes:
+      - ./:/go/app
+    entrypoint: /bin/bash
