@@ -1,17 +1,23 @@
 # Resposta
 Para solucionar esse problema foi utilizado um container com Docker, ao invés da máquina virtual comum recomendada para o trabalho.
 
+Estado: 
+- [x] A
+- [ ] B
+- [ ] C
+- [ ] D
 ## Como executar a solução usando o Docker
-Dentro da pasta principal
-- docker-compose up.
+Dentro da pasta principal caso seja a primeira vez que irá executar
+- docker-compose up -d
+
+Dentro da pasta principal caso já tenha executado o comando a cima pelo menos uma vez
+- docker-compose start
 
 Execute o container de forma iterativa
-- docker exec -it [nome do container gerado] bash.
+- docker exec -it [nome do container gerado] Ssh.
 
 Depois bastar seguir os passos indicados na descrição do trabalho:
 - gere os binários (make);
-- execute os testes passando uma porta possível (./testa_cliente_servidor.sh :50000).
-
 # Trabalho 2: Mais sobre programação básica com sockets.
 
 ## Prefácio
@@ -75,8 +81,8 @@ O servidor responde com um pacote UDP contendo quatro inteiros: num, len, udp_po
 
 ![](./figs/resp-udp.png)
 
-###ESTADO B
-####Passo B1 - CLIENTE - REQUISIÇÃO
+### ESTADO B
+#### Passo B1 - CLIENTE - REQUISIÇÃO
 O cliente envia **num** pacotes UDP para o servidor que escuta a porta **udp_port**. Cada um desses pacotes
 de dados tem comprimento **len**. O campo **psecret** dos pacotes deve conter o valor informado em **secretA**.
 
@@ -96,7 +102,7 @@ Para completar este passo, o cliente deve receber todos pacotes ack do servidor 
 pacotes gerados. Para isso, o cliente deve reenviar todo pacote que o servidor não reconheceu
 com ACKs. O cliente deve usar um intervalo de retransmissão de meio segundo.
 
-####Passo B2 - SERVIDOR - RESPOSTA
+#### Passo B2 - SERVIDOR - RESPOSTA
 
 Para cada pacote de dados recebido, o servidor decide aleatoriamente se confirma
 aquele pacote respondendo com um pacote “ack” que contém como dado o identificador do
@@ -114,24 +120,24 @@ inteiros: um número de porta TCP e secretB.
 
 Agora o servidor deve esperar por uma conexão TCP do cliente no número da porta TCP.
 
-###ESTADO C
-####Passo C1 - CLIENTE - REQUISIÇÃO
+### ESTADO C
+#### Passo C1 - CLIENTE - REQUISIÇÃO
 O cliente abre uma conexão TCP com o servidor na porta tcp_port recebida do servidor no
 passo b2.
-####Passo C2 - SERVIDOR - RESPOSTA
+#### Passo C2 - SERVIDOR - RESPOSTA
 O servidor envia 3 inteiros: num2, len2, secretC e um caractere, c, escolhido de forma aleatória no 
 alfabeto.
 
 ![](./figs/pckt-c2.png)
 
-###ESTADO D
-####Passo D1 - CLIENTE - REQUISIÇÃO
+### ESTADO D
+#### Passo D1 - CLIENTE - REQUISIÇÃO
 O cliente envia num2 pacotes, cada com dados de comprimento len2, com todos os bytes definidos
 como o caractere informado pelo servidor no pacote enviado no passo c2.
 
 ![](./figs/pckt-d1.png)
 
-####Passo D2 - SERVIDOR - RESPOSTA
+#### Passo D2 - SERVIDOR - RESPOSTA
 O servidor responde com um inteiro: secretD.
 
 ![](./figs/pckt-d2.png)

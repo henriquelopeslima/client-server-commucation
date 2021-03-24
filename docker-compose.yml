@@ -4,7 +4,7 @@ services:
   go-app:
     stdin_open: true      # docker run -i
     tty: true             # docker run -t
-    build: ./docker/go
+    build: ./docker/
     volumes:
       - ./:/go/app
     entrypoint: /bin/bash
