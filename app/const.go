@@ -14,31 +14,31 @@ type header struct {
 	PayloadLen    uint32
 	PSecret       uint32
 	Step          uint16
-	Matriculation int16
+	Matriculation uint32
 }
 
-type packet struct {
+type packetA struct {
 	Header  header
 	Message [200]byte
 }
 
-type response struct {
+type responseA struct {
 	Header  header
-	Num     uint16
-	Len     uint16
-	UdpPort uint16
-	SecretA uint16
+	Num     uint32
+	Len     uint32
+	UdpPort uint32
+	SecretA uint32
 }
 
 type ack struct {
 	Header        header
-	AckedPacketId uint16
+	AckedPacketId uint32
 }
 
-type request struct {
+type packetB struct {
 	Header   header
-	PacketId uint16
-	Payload  [200]byte
+	PacketId uint32
+	Payload  uint32
 }
 
 func checkError(err error) {
@@ -56,7 +56,7 @@ func printHeader(param header, previous string) {
 	fmt.Println(previous+" - Matriculation ", param.Matriculation)
 }
 
-func printResponse(param response) {
+func printResponse(param responseA) {
 	fmt.Println("Response ")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - Len ", param.Len)
@@ -65,8 +65,21 @@ func printResponse(param response) {
 	fmt.Println(" - SecretA ", param.SecretA)
 }
 
-func getNumber() uint16 {
+func printRequest(param packetB) {
+	fmt.Println("Request ")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - PacketID ", param.PacketId)
+	fmt.Println(" - Payload ", param.Payload)
+}
+
+func printAck(param ack) {
+	fmt.Println("Request ")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - AckedPacketId ", param.AckedPacketId)
+}
+
+func getNumber() uint32 {
 	min := 10
 	max := 300
-	return uint16(rand.Intn(max-min+1) + min)
+	return uint32(rand.Intn(max-min+1) + min)
 }

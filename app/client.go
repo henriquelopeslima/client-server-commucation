@@ -24,8 +24,10 @@ func client(serverIp string, serverPort string) {
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	checkError(err)
 
+	bufferSend := new(bytes.Buffer)
+
 	// A1
-	helloPack := packet{
+	helloPack := packetA{
 		Header: header{
 			PayloadLen:    11,
 			PSecret:       0,
@@ -35,8 +37,6 @@ func client(serverIp string, serverPort string) {
 		Message: [200]byte{'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'},
 	}
 
-	bufferSend := new(bytes.Buffer)
-
 	err = binary.Write(bufferSend, binary.BigEndian, helloPack)
 	checkError(err)
 
@@ -44,7 +44,7 @@ func client(serverIp string, serverPort string) {
 	checkError(err)
 
 	bufferRecv := make([]byte, BufferSize)
-	var responseServer response
+	var responseServer responseA
 
 	_, err = conn.Read(bufferRecv)
 	checkError(err)
@@ -63,6 +63,23 @@ func client(serverIp string, serverPort string) {
 
 	//UDPConn
 	conn, err = net.DialUDP("udp", nil, udpAddr)
+	checkError(err)
+
+	packetBSend := packetB{
+		Header: header{
+			PayloadLen:    responseServer.Len,
+			PSecret:       responseServer.SecretA,
+			Step:          2,
+			Matriculation: matriculation,
+		},
+		PacketId: 123,
+		Payload:  1,
+	}
+
+	err = binary.Write(bufferSend, binary.BigEndian, packetBSend)
+	checkError(err)
+
+	_, err = conn.Write(bufferSend.Bytes())
 	checkError(err)
 
 	os.Exit(0)

@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-func server(serverPort string) {
+func serverA(serverPort string) {
 	udpAddr, err := net.ResolveUDPAddr("udp", ":"+serverPort)
 	checkError(err)
 
@@ -22,13 +22,25 @@ func server(serverPort string) {
 	checkError(err)
 
 	for {
-		handleClient(conn)
+		handleClientA(conn)
 	}
 }
 
-func handleClient(conn *net.UDPConn) {
+func serverB(serverPort string) {
+	udpAddr, err := net.ResolveUDPAddr("udp", ":"+serverPort)
+	checkError(err)
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+	checkError(err)
+
+	for {
+		handleClientB(conn)
+	}
+}
+
+func handleClientA(conn *net.UDPConn) {
 	bufferRecv := make([]byte, BufferSize)
-	var packetRecv packet
+	var packetRecv packetA
 
 	_, addr, _ := conn.ReadFromUDP(bufferRecv)
 
@@ -40,7 +52,7 @@ func handleClient(conn *net.UDPConn) {
 
 	if string(packetRecv.Message[:packetRecv.Header.PayloadLen]) == "Hello world" {
 		// A2
-		responsePack := response{
+		responsePack := responseA{
 			Header: header{
 				PayloadLen:    11,
 				PSecret:       0,
@@ -60,11 +72,34 @@ func handleClient(conn *net.UDPConn) {
 
 		_, _ = conn.WriteToUDP(buffer.Bytes(), addr)
 
-		go server(strconv.Itoa(int(responsePack.UdpPort)))
+		go serverB(strconv.Itoa(int(responsePack.UdpPort)))
 	}
+}
+
+func handleClientB(conn *net.UDPConn) {
+	fmt.Println("Segunda conexão")
+	bufferRecv := make([]byte, BufferSize)
+	var requestB packetB
+
+	_, addr, _ := conn.ReadFromUDP(bufferRecv)
+
+	_ = binary.Read(bytes.NewReader(bufferRecv), binary.BigEndian, &requestB)
+
+	fmt.Println("Pacote recebido do cliente - agora estamos no passo B")
+	fmt.Println("header: ", requestB.Header)
+	fmt.Println("packetId: ", requestB.PacketId)
+	fmt.Println("payload: ", requestB.Payload)
+
+	// B2
+	buffer := new(bytes.Buffer)
+
+	err := binary.Write(buffer, binary.BigEndian, requestB)
+	checkError(err)
+
+	_, _ = conn.WriteToUDP(buffer.Bytes(), addr)
 }
 
 // Main obtém argumentos da linha de comando e chama a função servidor
 func main() {
-	server(portUDP)
+	serverA(portUDP)
 }
