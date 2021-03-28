@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const BufferSize = 2048
+const BufferSize = 1024
 const portUDP = "12235"
 const matriculation = 624
 
@@ -22,6 +22,17 @@ type packetA struct {
 	Message [200]byte
 }
 
+type packetB struct {
+	Header   header
+	PacketId uint32
+	Payload  uint32
+}
+
+type packetC struct {
+	Header  header
+	Payload [20]byte
+}
+
 type responseA struct {
 	Header  header
 	Num     uint32
@@ -30,15 +41,28 @@ type responseA struct {
 	SecretA uint32
 }
 
+type responseB struct {
+	Header  header
+	TcpPort uint32
+	SecretB uint32
+}
+
+type responseC struct {
+	Header  header
+	Num2    uint32
+	Len2    uint32
+	SecretC uint32
+	C       [20]byte
+}
+
+type responseD struct {
+	Header  header
+	SecretD uint32
+}
+
 type ack struct {
 	Header        header
 	AckedPacketId uint32
-}
-
-type packetB struct {
-	Header   header
-	PacketId uint32
-	Payload  uint32
 }
 
 func checkError(err error) {
@@ -49,15 +73,15 @@ func checkError(err error) {
 }
 
 func printHeader(param header, previous string) {
-	fmt.Println(previous + "Header ")
+	fmt.Println(previous + "Header")
 	fmt.Println(previous+" - PayloadLen ", param.PayloadLen)
 	fmt.Println(previous+" - PSecret ", param.PSecret)
 	fmt.Println(previous+" - Step ", param.Step)
 	fmt.Println(previous+" - Matriculation ", param.Matriculation)
 }
 
-func printResponse(param responseA) {
-	fmt.Println("Response ")
+func printResponseA(param responseA) {
+	fmt.Println("Response A")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - Len ", param.Len)
 	fmt.Println(" - Num ", param.Num)
@@ -65,15 +89,49 @@ func printResponse(param responseA) {
 	fmt.Println(" - SecretA ", param.SecretA)
 }
 
+func printResponseB(param responseB) {
+	fmt.Println("Response B")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - TcpPort ", param.TcpPort)
+	fmt.Println(" - SecretB ", param.SecretB)
+}
+
+func printResponseC(param responseC) {
+	fmt.Println("Response C")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - Num2 ", param.Num2)
+	fmt.Println(" - Len2 ", param.Len2)
+	fmt.Println(" - SecretC ", param.SecretC)
+	fmt.Println(" - char ", string(param.C[:]))
+}
+
+func printResponseD(param responseD) {
+	fmt.Println("Response C")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - SecretD ", param.SecretD)
+}
+
+func printHello(param packetA) {
+	fmt.Println("Request")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - message ", string(param.Message[:]))
+}
+
 func printRequest(param packetB) {
-	fmt.Println("Request ")
+	fmt.Println("Request")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - PacketID ", param.PacketId)
 	fmt.Println(" - Payload ", param.Payload)
 }
 
+func printRequestTCP(param packetC) {
+	fmt.Println("Request")
+	printHeader(param.Header, " - ")
+	fmt.Println(" - Payload ", string(param.Payload[:]))
+}
+
 func printAck(param ack) {
-	fmt.Println("Request ")
+	fmt.Println("Request")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - AckedPacketId ", param.AckedPacketId)
 }

@@ -8,7 +8,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"strconv"
@@ -26,7 +26,7 @@ func serverA(serverPort string) {
 	}
 }
 
-func serverB(serverPort string) {
+func serverB(serverPort string, pack responseA) {
 	udpAddr, err := net.ResolveUDPAddr("udp", ":"+serverPort)
 	checkError(err)
 
@@ -34,21 +34,36 @@ func serverB(serverPort string) {
 	checkError(err)
 
 	for {
-		handleClientB(conn)
+		handleClientB(conn, pack)
+	}
+}
+
+func serverC(serverPort string, pack responseB) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+serverPort)
+	checkError(err)
+
+	listener, err := net.ListenTCP("tcp", tcpAddr)
+	checkError(err)
+
+	for {
+		conn, err := listener.Accept()
+		checkError(err)
+		handleClientC(conn, pack)
 	}
 }
 
 func handleClientA(conn *net.UDPConn) {
-	bufferRecv := make([]byte, BufferSize)
+	fmt.Println("Conexão A")
+
 	var packetRecv packetA
-
+	bufferRecv := make([]byte, BufferSize)
 	_, addr, _ := conn.ReadFromUDP(bufferRecv)
-
-	_ = binary.Read(bytes.NewReader(bufferRecv), binary.BigEndian, &packetRecv)
+	dec := gob.NewDecoder(bytes.NewReader(bufferRecv))
+	err := dec.Decode(&packetRecv)
+	checkError(err)
 
 	fmt.Println("Pacote recebido do cliente")
-	fmt.Println("header: ", packetRecv.Header)
-	fmt.Println("message: ", string(packetRecv.Message[:]))
+	printHello(packetRecv)
 
 	if string(packetRecv.Message[:packetRecv.Header.PayloadLen]) == "Hello world" {
 		// A2
@@ -66,37 +81,101 @@ func handleClientA(conn *net.UDPConn) {
 		}
 
 		buffer := new(bytes.Buffer)
-
-		err := binary.Write(buffer, binary.BigEndian, responsePack)
+		enc := gob.NewEncoder(buffer)
+		err := enc.Encode(&responsePack)
 		checkError(err)
 
 		_, _ = conn.WriteToUDP(buffer.Bytes(), addr)
 
-		go serverB(strconv.Itoa(int(responsePack.UdpPort)))
+		go serverB(strconv.Itoa(int(responsePack.UdpPort)), responsePack)
 	}
 }
 
-func handleClientB(conn *net.UDPConn) {
-	fmt.Println("Segunda conexão")
-	bufferRecv := make([]byte, BufferSize)
-	var requestB packetB
+func handleClientB(conn *net.UDPConn, pack responseA) {
+	fmt.Println("Conexão B")
 
-	_, addr, _ := conn.ReadFromUDP(bufferRecv)
+	ackRecv := ack{
+		Header: pack.Header,
+	}
 
-	_ = binary.Read(bytes.NewReader(bufferRecv), binary.BigEndian, &requestB)
+	var address *net.UDPAddr
 
-	fmt.Println("Pacote recebido do cliente - agora estamos no passo B")
-	fmt.Println("header: ", requestB.Header)
-	fmt.Println("packetId: ", requestB.PacketId)
-	fmt.Println("payload: ", requestB.Payload)
+	for i := 1; i <= int(pack.Num); i++ {
+		var requestB packetB
+		bufferRecv := make([]byte, BufferSize)
 
-	// B2
+		_, addr, _ := conn.ReadFromUDP(bufferRecv)
+		dec := gob.NewDecoder(bytes.NewReader(bufferRecv))
+		err := dec.Decode(&requestB)
+		checkError(err)
+
+		address = addr
+
+		printRequest(requestB)
+
+		ackRecv.AckedPacketId = requestB.PacketId
+
+		//B2
+		buffer := new(bytes.Buffer)
+
+		enc := gob.NewEncoder(buffer)
+		err = enc.Encode(&ackRecv)
+		checkError(err)
+
+		_, _ = conn.WriteToUDP(buffer.Bytes(), addr)
+	}
+
+	var _responseB = responseB{
+		Header:  pack.Header,
+		TcpPort: getNumber() + 5000,
+		SecretB: getNumber(),
+	}
+
 	buffer := new(bytes.Buffer)
 
-	err := binary.Write(buffer, binary.BigEndian, requestB)
+	enc := gob.NewEncoder(buffer)
+	err := enc.Encode(&_responseB)
 	checkError(err)
 
-	_, _ = conn.WriteToUDP(buffer.Bytes(), addr)
+	_, _ = conn.WriteToUDP(buffer.Bytes(), address)
+
+	conn.Close()
+
+	serverC(strconv.Itoa(int(_responseB.TcpPort)), _responseB)
+}
+
+func handleClientC(conn net.Conn, pack responseB) {
+	fmt.Println("Conexão C")
+
+	//randomChar := string('a' + rune(rand.Intn(26)))
+	_responseC := responseC{
+		Header:  pack.Header,
+		Len2:    getNumber(),
+		Num2:    getNumber(),
+		SecretC: getNumber(),
+		C:       [20]byte{'c'},
+	}
+
+	var bufferSend = new(bytes.Buffer)
+
+	bufferSend = new(bytes.Buffer)
+	enc := gob.NewEncoder(bufferSend)
+	err := enc.Encode(&_responseC)
+	checkError(err)
+
+	_, err = conn.Write(bufferSend.Bytes())
+
+	//_responseD := responseD{
+	//	Header: pack.Header,
+	//	SecretD: getNumber(),
+	//}
+	//
+	//var bufferSend2 = new(bytes.Buffer)
+	//
+	//bufferSend = new(bytes.Buffer)
+	//enc = gob.NewEncoder(bufferSend2)
+	//err = enc.Encode(&_responseD)
+	//checkError(err)
 }
 
 // Main obtém argumentos da linha de comando e chama a função servidor
