@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 )
 
 func client(serverIp string, serverPort string) {
@@ -82,7 +83,7 @@ func client(serverIp string, serverPort string) {
 		err = enc.Encode(&packetBSend)
 		checkError(err)
 
-		//time.Sleep(500 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		_, err = conn.Write(bufferSend.Bytes())
 		checkError(err)
 
@@ -118,6 +119,7 @@ func client(serverIp string, serverPort string) {
 
 	connTCP.LocalAddr()
 
+	// C2 receiver
 	var _responseC responseC
 	bufferRe := make([]byte, BufferSize)
 	_, err = connTCP.Read(bufferRe)
@@ -145,18 +147,19 @@ func client(serverIp string, serverPort string) {
 		err = enc.Encode(&packetCSend)
 		checkError(err)
 
+		time.Sleep(100 * time.Millisecond)
 		_, err = connTCP.Write(bufferSend.Bytes())
 		checkError(err)
 	}
 
 	// D2 receiver
-	//var _responseD responseD
-	//bufferRecv = make([]byte, BufferSize)
-	//_, err = connTCP.Read(bufferRecv)
-	//checkError(err)
-	//dec = gob.NewDecoder(bytes.NewReader(bufferRecv))
-	//err = dec.Decode(&_responseD)
-	//printResponseD(_responseD)
+	var _responseD responseD
+	bufferRecv = make([]byte, BufferSize)
+	_, err = connTCP.Read(bufferRecv)
+	checkError(err)
+	dec = gob.NewDecoder(bytes.NewReader(bufferRecv))
+	err = dec.Decode(&_responseD)
+	printResponseD(_responseD)
 
 	os.Exit(0)
 }

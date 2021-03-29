@@ -5,7 +5,7 @@ Estado:
 - [x] A
 - [x] B
 - [x] C
-- [ ] D
+- [x] D
 ## Como executar a solução usando o Docker
 Dentro da pasta principal caso seja a primeira vez que irá executar
 - docker-compose up -d

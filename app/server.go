@@ -144,12 +144,14 @@ func handleClientB(conn *net.UDPConn, pack responseA) {
 
 	conn.Close()
 
+	// C1 open connection
 	serverC(strconv.Itoa(int(_responseB.TcpPort)), _responseB)
 }
 
 func handleClientC(conn net.Conn, pack responseB) {
 	fmt.Println("Conexão C")
 
+	// C2 send
 	randomChar := string('a' + rune(rand.Intn(26)))
 	_responseC := responseC{
 		Header:  pack.Header,
@@ -181,19 +183,20 @@ func handleClientC(conn net.Conn, pack responseB) {
 		printPackD(_packD)
 		fmt.Println(_responseC.Num2, " - ", i)
 	}
-
 	// D2 send
-	//_responseD := responseD{
-	//	Header: pack.Header,
-	//	SecretD: getNumber(),
-	//}
-	//
-	//var bufferSend2 = new(bytes.Buffer)
-	//
-	//bufferSend = new(bytes.Buffer)
-	//enc = gob.NewEncoder(bufferSend2)
-	//err = enc.Encode(&_responseD)
-	//checkError(err)
+	_responseD := responseD{
+		Header:  pack.Header,
+		SecretD: getNumber(),
+	}
+
+	bufferSend2 := new(bytes.Buffer)
+	enc = gob.NewEncoder(bufferSend2)
+	err = enc.Encode(&_responseD)
+	checkError(err)
+	_, err = conn.Write(bufferSend2.Bytes())
+	checkError(err)
+	err = conn.Close()
+	checkError(err)
 }
 
 // Main obtém argumentos da linha de comando e chama a função servidor
