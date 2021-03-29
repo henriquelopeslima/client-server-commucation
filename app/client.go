@@ -71,7 +71,7 @@ func client(serverIp string, serverPort string) {
 			Header: header{
 				PayloadLen:    responseServer.Len,
 				PSecret:       responseServer.SecretA,
-				Step:          2,
+				Step:          1,
 				Matriculation: matriculation,
 			},
 			PacketId: uint32(i),
@@ -134,9 +134,9 @@ func client(serverIp string, serverPort string) {
 	for i := 1; i <= int(_responseC.Num2); i++ {
 		packetCSend := packetD{
 			Header: header{
-				PayloadLen:    responseServer.Len,
-				PSecret:       responseServer.SecretA,
-				Step:          2,
+				PayloadLen:    _responseC.Len2,
+				PSecret:       _responseC.SecretC,
+				Step:          1,
 				Matriculation: matriculation,
 			},
 			Payload: _responseC.C,

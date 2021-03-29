@@ -136,8 +136,6 @@ func printAck(param ack) {
 	fmt.Println(" - AckedPacketId ", param.AckedPacketId)
 }
 
-func getNumber() uint32 {
-	min := 10
-	max := 300
+func getNumber(max int, min int) uint32 {
 	return uint32(rand.Intn(max-min+1) + min)
 }

@@ -77,10 +77,10 @@ func handleClientA(conn *net.UDPConn) {
 				Step:          2,
 				Matriculation: matriculation,
 			},
-			Len:     getNumber(),
-			Num:     getNumber(),
-			UdpPort: getNumber() + 5000,
-			SecretA: getNumber(),
+			Len:     getNumber(8, 2),
+			Num:     getNumber(8, 2),
+			UdpPort: getNumber(5500, 5000),
+			SecretA: getNumber(10, 1),
 		}
 
 		buffer := new(bytes.Buffer)
@@ -101,6 +101,8 @@ func handleClientB(conn *net.UDPConn, pack responseA) {
 		Header: pack.Header,
 	}
 
+	ackRecv.Header.PSecret = pack.SecretA
+
 	var address *net.UDPAddr
 
 	for i := 1; i <= int(pack.Num); i++ {
@@ -111,6 +113,12 @@ func handleClientB(conn *net.UDPConn, pack responseA) {
 		dec := gob.NewDecoder(bytes.NewReader(bufferRecv))
 		err := dec.Decode(&requestB)
 		checkError(err)
+
+		if requestB.Header.PSecret != pack.SecretA {
+			fmt.Println("Segredo incorreto")
+			conn.Close()
+			break
+		}
 
 		address = addr
 
@@ -130,8 +138,8 @@ func handleClientB(conn *net.UDPConn, pack responseA) {
 
 	var _responseB = responseB{
 		Header:  pack.Header,
-		TcpPort: getNumber() + 5000,
-		SecretB: getNumber(),
+		TcpPort: getNumber(5500, 5000),
+		SecretB: getNumber(100, 1),
 	}
 
 	buffer := new(bytes.Buffer)
@@ -155,9 +163,9 @@ func handleClientC(conn net.Conn, pack responseB) {
 	randomChar := string('a' + rune(rand.Intn(26)))
 	_responseC := responseC{
 		Header:  pack.Header,
-		Len2:    getNumber(),
-		Num2:    getNumber(),
-		SecretC: getNumber(),
+		Len2:    getNumber(8, 2),
+		Num2:    getNumber(8, 2),
+		SecretC: getNumber(10, 1),
 		C:       randomChar,
 	}
 
@@ -176,17 +184,23 @@ func handleClientC(conn net.Conn, pack responseB) {
 		bufferRecv := make([]byte, BufferSize)
 		_, err = conn.Read(bufferRecv)
 		checkError(err)
-
 		dec := gob.NewDecoder(bytes.NewReader(bufferRecv))
 		err = dec.Decode(&_packD)
 		checkError(err)
+
+		if _responseC.SecretC != _packD.Header.PSecret {
+			fmt.Println("Segredo incorreto")
+			err = conn.Close()
+			break
+		}
+
 		printPackD(_packD)
 		fmt.Println(_responseC.Num2, " - ", i)
 	}
 	// D2 send
 	_responseD := responseD{
 		Header:  pack.Header,
-		SecretD: getNumber(),
+		SecretD: getNumber(10, 1),
 	}
 
 	bufferSend2 := new(bytes.Buffer)
