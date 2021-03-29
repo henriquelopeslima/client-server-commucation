@@ -3,8 +3,8 @@ Para solucionar esse problema foi utilizado um container com Docker, ao invés d
 
 Estado: 
 - [x] A
-- [ ] B
-- [ ] C
+- [x] B
+- [x] C
 - [ ] D
 ## Como executar a solução usando o Docker
 Dentro da pasta principal caso seja a primeira vez que irá executar

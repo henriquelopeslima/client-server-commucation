@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"math/rand"
 	"net"
 	"strconv"
 )
@@ -44,6 +45,8 @@ func serverC(serverPort string, pack responseB) {
 
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	checkError(err)
+
+	defer listener.Close()
 
 	for {
 		conn, err := listener.Accept()
@@ -147,13 +150,13 @@ func handleClientB(conn *net.UDPConn, pack responseA) {
 func handleClientC(conn net.Conn, pack responseB) {
 	fmt.Println("Conexão C")
 
-	//randomChar := string('a' + rune(rand.Intn(26)))
+	randomChar := string('a' + rune(rand.Intn(26)))
 	_responseC := responseC{
 		Header:  pack.Header,
 		Len2:    getNumber(),
 		Num2:    getNumber(),
 		SecretC: getNumber(),
-		C:       [20]byte{'c'},
+		C:       randomChar,
 	}
 
 	var bufferSend = new(bytes.Buffer)
@@ -165,6 +168,21 @@ func handleClientC(conn net.Conn, pack responseB) {
 
 	_, err = conn.Write(bufferSend.Bytes())
 
+	// D1 receiver
+	for i := 1; i <= int(_responseC.Num2); i++ {
+		var _packD packetD
+		bufferRecv := make([]byte, BufferSize)
+		_, err = conn.Read(bufferRecv)
+		checkError(err)
+
+		dec := gob.NewDecoder(bytes.NewReader(bufferRecv))
+		err = dec.Decode(&_packD)
+		checkError(err)
+		printPackD(_packD)
+		fmt.Println(_responseC.Num2, " - ", i)
+	}
+
+	// D2 send
 	//_responseD := responseD{
 	//	Header: pack.Header,
 	//	SecretD: getNumber(),

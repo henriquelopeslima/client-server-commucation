@@ -28,9 +28,9 @@ type packetB struct {
 	Payload  uint32
 }
 
-type packetC struct {
+type packetD struct {
 	Header  header
-	Payload [20]byte
+	Payload string
 }
 
 type responseA struct {
@@ -52,7 +52,7 @@ type responseC struct {
 	Num2    uint32
 	Len2    uint32
 	SecretC uint32
-	C       [20]byte
+	C       string
 }
 
 type responseD struct {
@@ -106,7 +106,7 @@ func printResponseC(param responseC) {
 }
 
 func printResponseD(param responseD) {
-	fmt.Println("Response C")
+	fmt.Println("Response D")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - SecretD ", param.SecretD)
 }
@@ -124,7 +124,7 @@ func printRequest(param packetB) {
 	fmt.Println(" - Payload ", param.Payload)
 }
 
-func printRequestTCP(param packetC) {
+func printPackD(param packetD) {
 	fmt.Println("Request")
 	printHeader(param.Header, " - ")
 	fmt.Println(" - Payload ", string(param.Payload[:]))

@@ -128,8 +128,9 @@ func client(serverIp string, serverPort string) {
 	checkError(err)
 	printResponseC(_responseC)
 
+	// D1 send
 	for i := 1; i <= int(_responseC.Num2); i++ {
-		packetCSend := packetC{
+		packetCSend := packetD{
 			Header: header{
 				PayloadLen:    responseServer.Len,
 				PSecret:       responseServer.SecretA,
@@ -139,16 +140,16 @@ func client(serverIp string, serverPort string) {
 			Payload: _responseC.C,
 		}
 
-		bufferSend = new(bytes.Buffer)
+		bufferSend := new(bytes.Buffer)
 		enc = gob.NewEncoder(bufferSend)
 		err = enc.Encode(&packetCSend)
 		checkError(err)
 
-		//time.Sleep(500 * time.Millisecond)
 		_, err = connTCP.Write(bufferSend.Bytes())
 		checkError(err)
 	}
 
+	// D2 receiver
 	//var _responseD responseD
 	//bufferRecv = make([]byte, BufferSize)
 	//_, err = connTCP.Read(bufferRecv)
